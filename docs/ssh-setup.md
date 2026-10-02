@@ -28,19 +28,27 @@ ssh-add $env:USERPROFILE\.ssh\id_ed25519
 
 ## 2. Your key on the VM
 
-Copy the public key into `~/.ssh/authorized_keys` on the VM; you'll type your VM password once. Replace `you`
-with your VM user and `agents.mshome.net` with the VM's name or IP address.
+Copy the public key into `~/.ssh/authorized_keys` on the VM. In the commands below, replace `<user>` with the user
+you created on the VM, and `agents.mshome.net` with the VM's name or IP address. You type your VM password once.
+If it's refused, check the user name first: for a user that doesn't exist, SSH also just says the password is wrong.
 
-On Windows (PowerShell), which has no `ssh-copy-id`:
+On Windows, in **PowerShell** (Windows has no `ssh-copy-id`, and in cmd or Git Bash this command copies nothing,
+without an error):
 
 ```powershell
-type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh you@agents.mshome.net "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh <user>@agents.mshome.net "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
 ```
 
 On macOS or Linux:
 
 ```bash
-ssh-copy-id you@agents.mshome.net
+ssh-copy-id <user>@agents.mshome.net
+```
+
+Then check that the key works. This must print the VM's host name without asking for a password:
+
+```bash
+ssh -o BatchMode=yes <user>@agents.mshome.net hostname
 ```
 
 The same `authorized_keys` decides who may connect into the agents' containers (for Rider): `agent.sh` copies it
@@ -53,7 +61,7 @@ Add to `~/.ssh/config` on your machine (`%USERPROFILE%\.ssh\config` on Windows; 
 ```
 Host agents
     HostName agents.mshome.net
-    User you
+    User <user>
 
 Host agent-*
     User agent

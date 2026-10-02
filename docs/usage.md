@@ -39,7 +39,7 @@ Register it once in your Claude Code (user scope, so every project sees it). Rep
 differs, and the path if the repo lives elsewhere on the VM. On macOS and Linux:
 
 ```bash
-claude mcp add --scope user agents -- ssh -o BatchMode=yes -o ServerAliveInterval=30 agents /home/you/claude-agents-vm/mcp/serve
+claude mcp add --scope user agents -- ssh -o BatchMode=yes -o ServerAliveInterval=30 agents /home/<user>/claude-agents-vm/mcp/serve
 ```
 
 On Windows, run the same from Git Bash with `MSYS_NO_PATHCONV=1` in front, so Git Bash doesn't rewrite the Linux

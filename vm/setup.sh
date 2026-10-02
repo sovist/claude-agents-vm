@@ -94,6 +94,16 @@ step "Agents folder and autostart"
 as_user mkdir -p "$home/agents"
 as_user "$root/agents.sh" autostart on
 
+step "Disk"
+# Ubuntu Server's default storage layout gives / only half of the LVM volume group.
+vg_free="$(vgs --noheadings --units g --nosuffix -o vg_free 2>/dev/null | awk '{ s += $1 } END { printf "%d", s }')"
+if [ "${vg_free:-0}" -ge 5 ]; then
+    echo "$vg_free GB of the disk isn't used by / yet (the installer's default layout). To give it to /:"
+    echo "    sudo lvextend -r -l +100%FREE /dev/ubuntu-vg/ubuntu-lv"
+else
+    echo "/ has $(df -h / | awk 'NR == 2 { print $2 }')"
+fi
+
 step "Done"
 echo "Next, as $user (after logging in again if the docker group was just added): config.env, save-secret.sh"
 echo "for each token, allow.sh for the project's hosts, agents.sh build, agents.sh start agent-1. See docs/vm-setup.md."

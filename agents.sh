@@ -343,12 +343,16 @@ watcher)
             if [ -n "$p" ]; then echo "The watcher is already running (pid $p)."; exit 0; fi
             mkdir -p "$agents_dir"
             setsid "$PWD/mcp/watch" >> "$agents_dir/watch.log" 2>&1 < /dev/null &
-            sleep 2
-            p="$(watcher_pid)"
+            # The first start on a new VM downloads the watcher's Python packages first, which takes a while.
+            for _ in $(seq 1 60); do
+                p="$(watcher_pid)"
+                [ -n "$p" ] && break
+                sleep 1
+            done
             if [ -n "$p" ]; then
                 echo "Watcher started (pid $p): events in $agents_dir/events.jsonl, log in $agents_dir/watch.log."
             else
-                echo "The watcher didn't start; see $agents_dir/watch.log" >&2
+                echo "The watcher hasn't started after a minute; see $agents_dir/watch.log" >&2
                 exit 1
             fi
             ;;

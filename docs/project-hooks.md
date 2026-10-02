@@ -56,7 +56,13 @@ chown -R "$USERNAME:$USERNAME" "/home/$USERNAME/.nuget"
 api.nuget.org
 *.nuget.org
 github.com
+# NuGet checks the certificates of signed packages online
+ocsp.digicert.com
+crl3.digicert.com
+crl4.digicert.com
 ```
+
+To find hosts you missed, `./allow.sh --refused` lists what the proxy refused, most frequent first.
 
 The base image must be Ubuntu-based (Debian package names, an `ubuntu` user with UID 1000 that the build
 replaces). Official images built on Ubuntu 24.04 ("noble") fit, such as `mcr.microsoft.com/dotnet/sdk:10.0-noble`.

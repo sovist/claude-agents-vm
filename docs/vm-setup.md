@@ -45,6 +45,8 @@ Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All
    - Pick a host name you'll type often; this guide uses `agents`, giving `agents.mshome.net`.
    - Create your user. The agents' files on the VM belong to the first user (UID 1000), so use that one.
    - Tick **Install OpenSSH server**. No snaps are needed.
+   - On the **Storage configuration** screen, the default layout gives `/` only half the disk. Select `ubuntu-lv`,
+     choose **Edit**, and set its size to the maximum. If you miss it, `vm/setup.sh` reminds you and prints the fix.
 5. After the install, reboot, log in once at the console, and check the network: `ping -c1 ubuntu.com`.
 6. Take a checkpoint of the clean install (Hyper-V Manager → Checkpoint). Checkpoints are your undo for the
    whole VM; take one before big changes.
@@ -66,7 +68,15 @@ From your machine, once `ssh agents` works:
 ssh agents "git clone https://github.com/sovist/claude-agents-vm.git ~/claude-agents-vm"
 ```
 
-Clone your own fork instead if you keep one (docs/project-hooks.md). Then:
+Clone your own fork instead if you keep one (docs/project-hooks.md). Then create your settings: copy
+`config.example.env` to `config.env` and fill it in (your repository, its git host and token user name, the name
+and email the agents commit with, optionally Jira, your time zone):
+
+```bash
+ssh -t agents "cd ~/claude-agents-vm && cp config.example.env config.env && nano config.env"
+```
+
+Then the one-time setup, which reads the time zone from `config.env`:
 
 ```bash
 ssh -t agents "sudo ~/claude-agents-vm/vm/setup.sh"
@@ -74,18 +84,17 @@ ssh -t agents "sudo ~/claude-agents-vm/vm/setup.sh"
 
 It installs Docker Engine and the compose plugin, configures Docker's networks and log limits, adds you to the
 docker group, installs `uv` (runs the MCP server), sets the time zone from `config.env` if set, and turns on the
-boot autostart. It's safe to run again; finished steps are skipped. Being in the docker group is equivalent to
+boot autostart. It also tells you when `/` doesn't use the whole disk. It's safe to run again; finished steps
+are skipped. Being in the docker group is equivalent to
 root on the VM, which is why the VM itself is the security boundary ([security.md](security.md)).
 
 ## Configure
 
 On the VM, in `~/claude-agents-vm`:
 
-1. `cp config.example.env config.env` and fill it in: your repository, its git host and token user name, the
-   name and email the agents commit with, optionally Jira, your time zone.
-2. Describe your stack in `project/` ([project-hooks.md](project-hooks.md)): at least a base image or an
+1. Describe your stack in `project/` ([project-hooks.md](project-hooks.md)): at least a base image or an
    `image.sh` with your build tools, and a `CLAUDE.md` saying how to build and test.
-3. Save the tokens, each at its own prompt (nothing is shown or stored in shell history):
+2. Save the tokens, each at its own prompt (nothing is shown or stored in shell history):
 
    ```bash
    ssh -t agents ~/claude-agents-vm/save-secret.sh git-token
@@ -95,13 +104,16 @@ On the VM, in `~/claude-agents-vm`:
    ssh -t agents ~/claude-agents-vm/save-secret.sh claude-oauth-token
    ```
 
-   - `git-token`: for your git host. Prefer a fine-grained token limited to the one repository, with read and
-     write access to contents (and pull requests, if agents should open them).
+   - `git-token`: for your git host; agents use it to push (a public repository can be cloned without it). On
+     GitHub, create a fine-grained token: under Repository access choose *Only select repositories* and pick
+     your repository, then under Permissions give *Contents* read and write access (and *Pull requests*, if agents
+     should open them). For a read-only trial on a public repository, *Public repositories* with no extra
+     permissions is enough.
    - `claude-oauth-token`: run `claude setup-token` on your own machine and paste what it prints. It's a
      long-lived token that only allows inference; usage counts against your Claude plan.
    - For Jira and Confluence: `jira-token`, `confluence-token` (Atlassian API tokens with read-only scopes) and
      `atlassian-email`.
-4. Allow the hosts your agents need beyond Claude: your git host and package registries, e.g.
+3. Allow the hosts your agents need beyond Claude: your git host and package registries, e.g.
 
    ```bash
    ssh agents "~/claude-agents-vm/allow.sh github.com api.nuget.org '*.nuget.org'"

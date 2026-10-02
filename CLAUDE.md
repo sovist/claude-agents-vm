@@ -28,17 +28,21 @@ Work through it in order. Before each step, check whether it's already done (the
    Claude Code session started in that folder.
 1. **VM exists and boots.** Check: none possible until SSH works. Guide: docs/vm-setup.md (Hyper-V in detail).
 2. **SSH from their machine to the VM.** Check: `ssh -o BatchMode=yes <host> true`. Guide: docs/ssh-setup.md.
+   On Windows the key-copy command works only in PowerShell. If the password is refused, check the user name first.
 3. **Repo on the VM.** Check: `ssh <host> test -x ~/claude-agents-vm/agents.sh`. Do: `git clone` it there (or their fork).
-4. **One-time VM setup.** Check: `ssh <host> 'docker info >/dev/null && ~/.local/bin/uv --version'`.
-   They run: `ssh -t <host> "sudo ~/claude-agents-vm/vm/setup.sh"`, then log out of any VM session so the docker
-   group applies (new SSH connections get it).
-5. **config.env.** Check: the file exists with REPO_URL, GIT_HOST, GIT_HOST_USERNAME, AGENT_GIT_NAME, AGENT_GIT_EMAIL.
+4. **config.env.** Check: the file exists with REPO_URL, GIT_HOST, GIT_HOST_USERNAME, AGENT_GIT_NAME, AGENT_GIT_EMAIL.
    Do: copy config.example.env and fill it in with them. The git user name depends on the host (see the comments).
+   For a public GitHub repository, suggest their GitHub no-reply address as AGENT_GIT_EMAIL.
+5. **One-time VM setup.** Check: `ssh <host> 'docker info >/dev/null && ~/.local/bin/uv --version'`.
+   They run: `ssh -t <host> "sudo ~/claude-agents-vm/vm/setup.sh"`, after step 4, since it reads TZ_NAME from
+   config.env. New SSH connections get the docker group. If it reports that `/` doesn't use the whole disk, give
+   them the command it prints.
 6. **Project hooks.** Ask about their stack (language, build tool, package registries) and write `project/` files
    (docs/project-hooks.md): base image or `image.sh`, `CLAUDE.md` with how to build and test, `allowed-domains.txt`.
 7. **Tokens.** Check: `ssh <host> ls ~/claude-agents-vm/secrets` (names only). Needed: `git-token`,
    `claude-oauth-token`; for Jira: `jira-token`, `confluence-token`, `atlassian-email`. They save each one (above).
-   Recommend a fine-grained git token limited to the one repository, with contents and pull-request access.
+   For GitHub, a fine-grained token: *Only select repositories* with theirs, Contents read and write (and Pull
+   requests if agents open them); for a read-only trial on a public repository, *Public repositories* is enough.
 8. **Allowed hosts.** The git host at least (`./allow.sh github.com`), plus the package registries from step 6.
 9. **Build and first agent.** `./agents.sh build`, then `./agents.sh start agent-1`; check with `./agents.sh list`
    that it reaches `ready`. The first start clones the repository, which can take minutes.
