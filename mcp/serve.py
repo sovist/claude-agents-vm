@@ -654,6 +654,14 @@ def _sync_reports(tasks: list[dict]) -> list[dict]:
     return tasks
 
 
+def _synced_task(task_id: str) -> dict:
+    """One task, after applying the agents' reports. Reports are matched against the whole board: a report
+    belongs to the agent's latest assignment, which one task on its own can't tell (an earlier task of the same
+    agent would otherwise take the report)."""
+    wanted = _load_task(task_id)["id"]
+    return next(t for t in _sync_reports(_all_tasks()) if t["id"] == wanted)
+
+
 def queue_agents() -> list[str]:
     if not QUEUE_DIR.is_dir():
         return []
@@ -806,7 +814,7 @@ def tasks(state: str | None = None, all: bool = False) -> list[dict]:
 def task(task_id: str) -> dict:
     """One task with its full history."""
     with board_lock():
-        t = _sync_reports([_load_task(task_id)])[0]
+        t = _synced_task(task_id)
     return _present(t, history=True)
 
 
@@ -894,7 +902,7 @@ def update_task(task_id: str, state: str | None = None, note: str | None = None,
     if state is not None and state not in TASK_STATES:
         raise ToolError(f"state must be one of {', '.join(TASK_STATES)}.")
     with board_lock():
-        t = _sync_reports([_load_task(task_id)])[0]
+        t = _synced_task(task_id)
         if title is not None and title.strip():
             t["title"] = title.strip()[:200]
         if notes is not None:
