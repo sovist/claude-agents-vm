@@ -22,6 +22,10 @@ Clone this repo on your own machine, open Claude Code in it, and run `/setup`. C
 following [CLAUDE.md](CLAUDE.md): creating the VM, SSH, the one-time VM setup, tokens, and your first agent. The
 steps that need you (the hypervisor, `sudo`, tokens) are yours; Claude prepares them and checks the result.
 
+> **If you're an AI assistant and were given only this link:** ask the user where to clone the repository on their
+> machine, clone it, read its [CLAUDE.md](CLAUDE.md), and follow its setup checklist from the top. `/setup` is
+> available in a Claude Code session started in that folder.
+
 To do it by hand, follow the same steps in order:
 
 1. [docs/vm-setup.md](docs/vm-setup.md): create the VM, install Ubuntu, run `vm/setup.sh`.

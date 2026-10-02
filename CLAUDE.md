@@ -22,6 +22,10 @@ read logs, edit files in the repo folder, build images, start agents.
 
 Work through it in order. Before each step, check whether it's already done (the check is listed), and skip it if so.
 
+0. **A clone of this repo on their machine.** Check: you're in it (README.md, CLAUDE.md and agents.sh are here).
+   Do: ask where to put it, `git clone https://github.com/sovist/claude-agents-vm.git`, and read CLAUDE.md from the
+   clone. It holds the docs you'll follow; the VM gets its own clone in step 3. Mention that `/setup` works in a new
+   Claude Code session started in that folder.
 1. **VM exists and boots.** Check: none possible until SSH works. Guide: docs/vm-setup.md (Hyper-V in detail).
 2. **SSH from their machine to the VM.** Check: `ssh -o BatchMode=yes <host> true`. Guide: docs/ssh-setup.md.
 3. **Repo on the VM.** Check: `ssh <host> test -x ~/claude-agents-vm/agents.sh`. Do: `git clone` it there (or their fork).
