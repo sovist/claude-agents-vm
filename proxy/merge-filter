@@ -1,0 +1,9 @@
+#!/bin/sh
+# Builds the proxy's filter from the base allow-list (proxy/allowed-domains.txt, mounted at host/) and the
+# project's (project/allowed-domains.txt, mounted at project/, optional). Run at start and before each reload.
+set -e
+out=/tmp/allowed-domains.txt
+cat /etc/tinyproxy/host/allowed-domains.txt /etc/tinyproxy/project/allowed-domains.txt 2>/dev/null \
+    | sed 's/[[:space:]]*#.*//; s/^[[:space:]]*//; s/[[:space:]]*$//' | grep -v '^$' | sort -u > "$out.new"
+mv "$out.new" "$out"
+echo "allow-list: $(wc -l < "$out") patterns"

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Container entrypoint: prepares Claude Code's settings in .claude.json, then runs the given command.
+#  - With a token from "claude setup-token" (CLAUDE_CODE_OAUTH_TOKEN), interactive Claude Code still runs
+#    its first-run setup, including the browser sign-in, until hasCompletedOnboarding is set. Headless
+#    runs (claude -p) skip it and use the token directly. Setting it makes interactive sessions use the
+#    token too, and skips the theme picker (the default theme is dark).
+#  - /workspace is always the agent's own clone of the configured repository, so the folder trust check is
+#    answered here instead of by hand for every new agent.
+set -uo pipefail
+
+f="${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json"
+token=false
+[ -n "${CLAUDE_CODE_OAUTH_TOKEN:-}" ] && token=true
+
+if { [ -s "$f" ] && cat "$f" || echo '{}'; } \
+    | jq --argjson token "$token" '
+        (if $token then .hasCompletedOnboarding = true else . end)
+        | .projects["/workspace"].hasTrustDialogAccepted = true' > "$f.tmp" 2>/dev/null; then
+    if cmp -s "$f.tmp" "$f"; then rm -f "$f.tmp"; else mv "$f.tmp" "$f"; fi
+else
+    rm -f "$f.tmp"
+fi
+
+# Agents started by agent.sh: stop an unused Rider backend after RIDER_IDLE_MINUTES.
+if [ "${AGENT_RIDER_WATCHDOG:-}" = 1 ]; then
+    setsid rider-idle-stop >/dev/null 2>&1 < /dev/null &
+fi
+
+exec "$@"

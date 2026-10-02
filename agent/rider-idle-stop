@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Stops Rider's remote development backend in this container once no Rider window has been connected
+# to it for RIDER_IDLE_MINUTES (default 10), to free its memory. Started in the background by
+# agent-entrypoint. The next Rider connection starts the backend again.
+#
+# "Connected" means a port forward: Rider's window reaches its backend through an SSH port forward, so
+# the container's sshd holds an established TCP socket while a window is open. Rider keeps plain SSH
+# connections open after its window closes (its Remote Development list uses them), and those hold no
+# TCP socket: sshd itself talks over docker exec's pipes (see agent-sshd). So they don't count.
+#
+# Reports its view to /run/agent-status/rider for "agents.sh list":  <connected|idle|off> TAB <unix time>
+set -uo pipefail
+
+limit=$(( ${RIDER_IDLE_MINUTES:-10} * 60 ))
+report=/run/agent-status/rider
+# Rider's processes are the ones whose command line starts with its backend folder (either path to it,
+# or "/bin/sh" running its start script). Anchored, so it can never match the container's init process,
+# whose arguments hold the container's whole start command, or anything else that merely mentions it.
+backend='^(/bin/sh )?/home/agent/\.(cache/JetBrains|jetbrains/cache)/RemoteDev/dist/'
+idle_since=
+
+# Live processes only (-r: running, sleeping, disk wait, traced): an exited process that its
+# parent hasn't reaped yet is a zombie, and must not count.
+alive() { pgrep -r DRSt "$@" >/dev/null; }
+
+# True while any sshd holds an established TCP socket, i.e. a port forward is open.
+port_forward_open() {
+    local inodes=() p fd l
+    for p in $(pgrep -r DRSt -x sshd); do
+        for fd in /proc/"$p"/fd/*; do
+            l="$(readlink "$fd" 2>/dev/null)" || continue
+            [[ "$l" == socket:\[*\] ]] && inodes+=("${l//[^0-9]/}")
+        done
+    done
+    [ ${#inodes[@]} -gt 0 ] || return 1
+    # /proc/net/tcp*: column 4 is the state (01 = established), column 10 the socket inode.
+    awk -v list=" ${inodes[*]} " 'FNR > 1 && $4 == "01" && index(list, " " $10 " ")' \
+        /proc/net/tcp /proc/net/tcp6 2>/dev/null | grep -q .
+}
+
+write() {
+    [ -d /run/agent-status ] || return 0
+    printf '%s\t%s\n' "$1" "$2" > "$report.tmp" 2>/dev/null && mv "$report.tmp" "$report" 2>/dev/null
+}
+
+while true; do
+    now=$(date +%s)
+    if ! alive -f "$backend"; then
+        idle_since=
+        write off "$now"
+    elif port_forward_open; then
+        idle_since=
+        write connected "$now"
+    else
+        [ -n "$idle_since" ] || idle_since=$now
+        write idle "$idle_since"
+        if [ $(( now - idle_since )) -ge "$limit" ]; then
+            # Only Rider's own processes: the agent's Claude Code and builds don't match.
+            pkill -f "$backend"
+            sleep 30
+            pkill -9 -f "$backend" 2>/dev/null
+            idle_since=
+            write off "$(date +%s)"
+        fi
+    fi
+    sleep 60
+done

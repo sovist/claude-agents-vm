@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# The agents MCP server over stdio (serve.py). Claude Code on the developer's machine runs it through ssh:
+#   claude mcp add --scope user agents -- ssh -o BatchMode=yes -o ServerAliveInterval=30 agents <repo folder>/mcp/serve
+# (see docs/usage.md). config.env is loaded first, through lib.sh. uv lives in ~/.local/bin (vm/setup.sh
+# installs it, without sudo) and runs serve.py with the mcp package from its cache, pinned by serve.py.lock
+# (refresh with: ~/.local/bin/uv lock --script serve.py).
+cd "$(dirname "$0")"
+. ../lib.sh
+exec "$HOME/.local/bin/uv" run -q --script serve.py

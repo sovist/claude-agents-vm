@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# The watcher calls notify.sh (in the repo folder) "<title>" "<text>" for every event that needs you (a task
+# reported done or needs-you, an agent asking for permission, Claude Code that ended by itself).
+# To use it: cp notify.sh.example notify.sh; chmod +x notify.sh; keep one of the examples below.
+# Without notify.sh, the events still go to ~/agents/events.jsonl, which agents-notify follows on Windows.
+title="$1"
+text="$2"
+
+# ntfy.sh: install the ntfy app (phone and desktop), subscribe to a topic with a long random name, which is
+# the only secret, and uncomment:
+# curl -fsS -H "Title: $title" -d "$text" "https://ntfy.sh/<your-topic>" >/dev/null
+
+# Email, when the VM has a working mail command:
+# printf '%s\n' "$text" | mail -s "$title" you@example.com

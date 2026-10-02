@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Read-only access to the Jira and Confluence Cloud REST APIs with scoped API tokens.
+# Installed as "jira" and "confluence"; the name it is called by picks the product.
+#
+#   jira /rest/api/2/issue/KEY-123
+#   jira /rest/api/3/search/jql -G --data-urlencode 'jql=project = KEY AND status = "In Progress"' --data-urlencode 'fields=summary,status'
+#   confluence /wiki/api/v2/pages/12345?body-format=storage
+#   confluence /wiki/rest/api/search -G --data-urlencode 'cql=text ~ "outline"'
+#
+# Scoped tokens only work through the api.atlassian.com gateway, not through <site>.atlassian.net,
+# so the path is sent to https://api.atlassian.com/ex/<product>/<cloud id><path>.
+# Extra arguments go to curl. The tokens carry read-only scopes, so writes are refused by Atlassian.
+# Configured by ATLASSIAN_CLOUD_ID (from the VM's config.env); without it the commands say so and stop.
+set -euo pipefail
+
+product="$(basename "$0")"
+case "$product" in
+    jira)       example=/rest/api/2/issue/KEY-123 ;;
+    confluence) example='/wiki/api/v2/pages/12345?body-format=storage' ;;
+    *) echo "Run this as jira or confluence." >&2; exit 2 ;;
+esac
+
+if [ $# -eq 0 ]; then
+    echo "Usage: $product <api-path> [curl options]   e.g. $product $example" >&2
+    exit 2
+fi
+path="$1"
+shift
+
+if [ -z "${ATLASSIAN_CLOUD_ID:-}" ]; then
+    echo "$product: Jira and Confluence aren't configured for these agents (ATLASSIAN_SITE and ATLASSIAN_CLOUD_ID in the VM's config.env)." >&2
+    exit 1
+fi
+token_file="/run/secrets/$product-token"
+email_file=/run/secrets/atlassian-email
+for f in "$token_file" "$email_file"; do
+    if [ ! -r "$f" ]; then
+        echo "$product: $f is missing; the developer saves it on the VM with save-secret.sh." >&2
+        exit 1
+    fi
+done
+
+# Accept full site URLs as well as paths.
+path="${path#https://*.atlassian.net}"
+case "$path" in /*) ;; *) path="/$path" ;; esac
+
+# Credentials go to curl on stdin, so they never appear in the process list.
+printf 'user = "%s:%s"\n' "$(tr -d '\r\n' < "$email_file")" "$(tr -d '\r\n' < "$token_file")" \
+    | curl -sS --fail-with-body -K - \
+        -H "Accept: application/json" \
+        "https://api.atlassian.com/ex/$product/$ATLASSIAN_CLOUD_ID$path" "$@"
+echo

@@ -1,0 +1,22 @@
+# sshd settings for agent-sshd: one connection at a time over stdin/stdout ("sshd -i"), run as the
+# agent user inside its container, for Rider's remote development. Nothing listens on a port, and only
+# the developer's key (mounted read-only by agent.sh) is accepted. agent-sshd appends a SetEnv line.
+HostKey /run/agent-ssh/ssh_host_ed25519_key
+AuthorizedKeysFile /run/agent-ssh/authorized_keys
+PidFile none
+UsePAM no
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+AllowUsers agent
+# Rider reaches its backend through a local port forward over this connection; nothing else is forwarded.
+AllowTcpForwarding local
+AllowStreamLocalForwarding no
+AllowAgentForwarding no
+X11Forwarding no
+PermitTunnel no
+GatewayPorts no
+PermitUserEnvironment no
+Subsystem sftp internal-sftp
+LogLevel ERROR

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# The agents watcher (watch.py): events, notifications and queue mode. Started by "agents.sh watcher start".
+# config.env is loaded first, through lib.sh.
+cd "$(dirname "$0")"
+. ../lib.sh
+exec "$HOME/.local/bin/uv" run -q --script watch.py

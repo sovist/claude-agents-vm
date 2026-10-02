@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Serves one SSH connection on stdin/stdout as the agent user, for Rider's remote development.
+# Run from the developer's PC through the VM, as the ProxyCommand of an "agent-*" host:
+#   ssh agents "docker exec -i <agent> agent-sshd"
+# Nothing listens on a port. sshd starts SSH sessions with a fresh environment, so the container's
+# settings (proxy, git identity, project build settings) are passed on with SetEnv. docker exec gives this
+# script the container's configured environment; all of it is passed except what a session sets itself,
+# and the Claude token, which only Claude Code needs.
+set -euo pipefail
+
+skip=" HOME PATH HOSTNAME TERM PWD OLDPWD SHLVL USER LOGNAME SHELL _ CLAUDE_CODE_OAUTH_TOKEN "
+
+conf=/tmp/agent-sshd_config
+{
+    cat /etc/ssh/agent_sshd_config
+    line=SetEnv
+    while IFS= read -r -d '' kv; do
+        name="${kv%%=*}"
+        value="${kv#*=}"
+        [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+        [[ "$skip" == *" $name "* ]] && continue
+        # sshd_config words are split on spaces unless quoted; a value with a quote or newline can't be passed.
+        [[ "$value" == *[\"$'\n']* ]] && continue
+        line+=" \"$name=$value\""
+    done < <(env -0)
+    echo "$line"
+} > "$conf.$$"
+mv "$conf.$$" "$conf"
+
+exec /usr/sbin/sshd -i -e -f "$conf"

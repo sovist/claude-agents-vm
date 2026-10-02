@@ -1,0 +1,29 @@
+{
+  "attribution": { "commit": "", "sessionUrl": false },
+  "permissions": {
+    "additionalDirectories": [ "/run/agent-status" ]
+  },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "agent-status ready" } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "agent-status working" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "agent-status working" } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "agent-status working" } ] }
+    ],
+    "Notification": [
+      { "hooks": [ { "type": "command", "command": "agent-status needs-you" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "agent-status done" } ] }
+    ],
+    "SessionEnd": [
+      { "hooks": [ { "type": "command", "command": "agent-status ended" } ] }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# The watcher's events (~/agents/events.jsonl), one JSON line each.
+#   ./events [n]        the last n (default 20)
+#   ./events --follow   keeps printing new ones (what agents-notify on Windows follows)
+f="$HOME/agents/events.jsonl"
+mkdir -p "$HOME/agents" && touch "$f"
+case "${1:-}" in
+    --follow|-f) exec tail -n 0 -F "$f" ;;
+    *) exec tail -n "${1:-20}" "$f" ;;
+esac

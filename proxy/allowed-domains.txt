@@ -1,0 +1,11 @@
+# Base allow-list: the hosts every agent needs, Claude Code's own. One shell-style pattern per line;
+# "*.example.com" does not match "example.com" itself, so list both when both are needed.
+# A project's own hosts (its git host, package registries...) go into project/allowed-domains.txt:
+# add them with ../allow.sh <host>. The proxy allows the hosts in both files.
+
+anthropic.com
+*.anthropic.com
+claude.ai
+*.claude.ai
+claude.com
+*.claude.com

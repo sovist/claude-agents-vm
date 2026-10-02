@@ -1,0 +1,7 @@
+# Tokens: saved with save-secret.sh, never committed.
+secrets/
+# Your notification channel (may hold a private ntfy topic or address); notify.sh.example is the template.
+notify.sh
+# Python
+__pycache__/
+*.pyc

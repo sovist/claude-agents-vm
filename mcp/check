@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Test client for the agents MCP server: ./check [tool [json arguments]]; see check.py.
+cd "$(dirname "$0")"
+exec "$HOME/.local/bin/uv" run -q --script check.py "$@"

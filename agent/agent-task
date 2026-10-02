@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Reports on the task this agent was given from the developer's task board (the agents MCP server on the VM):
+#   agent-task done "<one line: what you did, and the PR or branch>"
+#   agent-task needs-you "<what you need decided or provided>"
+# Writes one line to /run/agent-status/task: <state> TAB <unix time> TAB <note>. The board applies the
+# newest report to the task currently assigned to this agent.
+dir=/run/agent-status
+state="${1:-}"
+shift || true
+case "$state" in
+    done|needs-you) ;;
+    *) echo "Usage: agent-task done|needs-you [note]" >&2; exit 1 ;;
+esac
+[ -d "$dir" ] && [ -w "$dir" ] || { echo "No task board here (/run/agent-status isn't mounted)." >&2; exit 1; }
+note="$(printf '%s' "$*" | tr '\t\r\n' '   ' | cut -c1-500)"
+printf '%s\t%s\t%s\n' "$state" "$(date +%s)" "$note" > "$dir/task.tmp" && mv -f "$dir/task.tmp" "$dir/task"
+echo "Reported to the task board: $state${note:+ - $note}"
