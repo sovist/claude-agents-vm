@@ -16,6 +16,8 @@ container with its own clone of your repository, and drive them from the Claude 
 Tested with a Hyper-V VM on Windows 11 running Ubuntu Server 24.04, driven from Claude Code on Windows. The VM side
 is plain Ubuntu and Docker, so another hypervisor or a spare Linux machine should work too; that hasn't been tested.
 
+<p align="center"><img src="docs/images/architecture.svg" width="900" alt="Your machine reaches the VM over SSH only. Each agent runs Claude Code in its own container on an internal network with no route out; a proxy is the only exit and allows only listed hosts."></p>
+
 ## Set it up with Claude Code
 
 Clone this repo on your own machine, open Claude Code in it, and run `/setup`. Claude walks you through it

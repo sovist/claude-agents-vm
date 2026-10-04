@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="960" height="480" role="img" aria-labelledby="title desc">
+  <title id="title">claude-agents-vm architecture</title>
+  <desc id="desc">Your machine reaches a Linux VM over SSH only. In the VM, each agent runs Claude Code in its own container on an internal network with no route out; a proxy is the only exit and allows only listed hosts.</desc>
+  <style>
+    .bg { fill: #ffffff; }
+    .t { fill: #1f2328; font: 600 14px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .h { fill: #1f2328; font: 700 15px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .s { fill: #59636e; font: 400 12px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .box { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 1.2; }
+    .vm { fill: none; stroke: #0969da; stroke-width: 2; }
+    .vmh { fill: #0969da; font: 700 15px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .net { fill: none; stroke: #8c959f; stroke-width: 1.2; stroke-dasharray: 5 4; }
+    .proxy { fill: #fff8c5; stroke: #9a6700; stroke-width: 1.5; }
+    .ok { fill: #dafbe1; stroke: #1a7f37; stroke-width: 1.5; }
+    .no { fill: #ffebe9; stroke: #cf222e; stroke-width: 1.5; }
+    .okt { fill: #1a7f37; font: 700 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .not { fill: #cf222e; font: 700 13px system-ui, -apple-system, "Segoe UI", sans-serif; }
+    .line { stroke: #59636e; stroke-width: 1.6; fill: none; }
+    .blocked { stroke: #cf222e; stroke-width: 1.6; fill: none; stroke-dasharray: 4 3; }
+    .arrow { fill: #59636e; }
+    .arrowno { fill: #cf222e; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .t, .h { fill: #e6edf3; }
+      .s { fill: #9198a1; }
+      .box { fill: #161b22; stroke: #3d444d; }
+      .vm { stroke: #4493f8; }
+      .vmh { fill: #4493f8; }
+      .net { stroke: #656c76; }
+      .proxy { fill: #272115; stroke: #d29922; }
+      .ok { fill: #12261e; stroke: #3fb950; }
+      .no { fill: #2d1517; stroke: #f85149; }
+      .okt { fill: #3fb950; }
+      .not { fill: #f85149; }
+      .line { stroke: #9198a1; }
+      .blocked { stroke: #f85149; }
+      .arrow { fill: #9198a1; }
+      .arrowno { fill: #f85149; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrow"/>
+    </marker>
+    <marker id="x" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" class="arrowno"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="960" height="480" rx="12"/>
+
+  <!-- Your machine -->
+  <text class="h" x="30" y="52">Your machine</text>
+  <rect class="box" x="20" y="66" width="220" height="62" rx="8"/>
+  <text class="t" x="34" y="92">Claude Code</text>
+  <text class="s" x="34" y="112">drives the agents through MCP</text>
+  <rect class="box" x="20" y="140" width="220" height="62" rx="8"/>
+  <text class="t" x="34" y="166">Terminal tabs</text>
+  <text class="s" x="34" y="186">watch the list, attach to an agent</text>
+  <rect class="box" x="20" y="214" width="220" height="62" rx="8"/>
+  <text class="t" x="34" y="240">Rider</text>
+  <text class="s" x="34" y="260">remote dev inside a container</text>
+  <rect class="box" x="20" y="288" width="220" height="62" rx="8"/>
+  <text class="t" x="34" y="314">Notifications</text>
+  <text class="s" x="34" y="334">when an agent needs you</text>
+  <text class="s" x="20" y="380">Your files and credentials</text>
+  <text class="s" x="20" y="396">never reach the VM.</text>
+
+  <!-- SSH -->
+  <line class="line" x1="244" y1="208" x2="292" y2="208" marker-end="url(#a)"/>
+  <text class="t" x="248" y="196">SSH</text>
+  <text class="s" x="246" y="228">only</text>
+  <text class="s" x="246" y="243">way in</text>
+
+  <!-- VM -->
+  <rect class="vm" x="296" y="22" width="476" height="436" rx="12"/>
+  <text class="vmh" x="312" y="48">Linux VM: the boundary</text>
+  <rect class="box" x="312" y="62" width="444" height="44" rx="8"/>
+  <text class="t" x="326" y="89">agents.sh · watcher · MCP server · task board</text>
+
+  <rect class="net" x="312" y="122" width="300" height="320" rx="10"/>
+  <text class="s" x="326" y="142">internal network: no route out</text>
+  <rect class="box" x="326" y="154" width="272" height="64" rx="8"/>
+  <text class="t" x="340" y="180">agent-1</text>
+  <text class="s" x="340" y="200">Claude Code · its own clone of the repo</text>
+  <rect class="box" x="326" y="230" width="272" height="64" rx="8"/>
+  <text class="t" x="340" y="256">agent-2</text>
+  <text class="s" x="340" y="276">non-root · no Linux capabilities</text>
+  <rect class="box" x="326" y="306" width="272" height="64" rx="8"/>
+  <text class="t" x="340" y="332">agent-N</text>
+  <text class="s" x="340" y="352">scoped tokens, mounted read-only</text>
+  <text class="s" x="326" y="398">Each agent sees only its workspace.</text>
+  <text class="s" x="326" y="416">Its commits carry your configured identity.</text>
+
+  <!-- Proxy -->
+  <line class="line" x1="612" y1="262" x2="632" y2="262" marker-end="url(#a)"/>
+  <rect class="proxy" x="636" y="212" width="120" height="100" rx="8"/>
+  <text class="t" x="652" y="242">proxy</text>
+  <text class="s" x="652" y="262">the only exit</text>
+  <text class="s" x="652" y="279">HTTPS to listed</text>
+  <text class="s" x="652" y="295">hosts only</text>
+
+  <!-- Internet -->
+  <text class="h" x="800" y="52">Internet</text>
+  <line class="line" x1="756" y1="240" x2="796" y2="200" marker-end="url(#a)"/>
+  <rect class="ok" x="800" y="120" width="144" height="124" rx="8"/>
+  <text class="okt" x="814" y="146">Allowed</text>
+  <text class="s" x="814" y="170">Claude API</text>
+  <text class="s" x="814" y="190">your git host</text>
+  <text class="s" x="814" y="210">package registries</text>
+  <text class="s" x="814" y="230">(your list)</text>
+
+  <line class="blocked" x1="756" y1="290" x2="796" y2="326" marker-end="url(#x)"/>
+  <rect class="no" x="800" y="296" width="144" height="70" rx="8"/>
+  <text class="not" x="814" y="322">Everything else</text>
+  <text class="s" x="814" y="346">refused</text>
+</svg>
