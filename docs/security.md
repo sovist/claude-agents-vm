@@ -10,7 +10,7 @@ prompt injection in something it read, or a malicious package, and limits what t
 | --- | --- |
 | **The VM** | The outer boundary. Agents never run on your machine; your files, browser sessions and credentials aren't on the VM. |
 | **The container** | A non-root user, all Linux capabilities dropped, `no-new-privileges`, no sudo. The agent sees its own workspace, its Claude state and the tokens in `secrets/`, read-only. |
-| **The network** | Agents sit on a Docker network marked `internal`: no route out. The only way out is the proxy, which allows HTTPS (port 443) to the hosts on the allow-list and refuses everything else. |
+| **The network** | Agents sit on a Docker network marked `internal`: no route out. The only way out is the proxy, which allows HTTPS (port 443) to the hosts on the allow-list and refuses everything else. DNS isn't a way out either: Docker's resolver doesn't forward external lookups on an internal network, so the agents can't resolve any external name, and the proxy looks up a name only after its allow-list accepted it. To check: `docker exec agent-1 getent hosts example.com` must find nothing. |
 | **Tokens** | Scoped by you: a git token limited to one repository; read-only Atlassian tokens; a Claude token that only allows inference. |
 | **Commit identity** | Set by environment variables, so an agent can't commit under another name by changing git config. |
 
@@ -20,8 +20,6 @@ prompt injection in something it read, or a malicious package, and limits what t
   your git token permits, open pull requests, or post data to any allowed host, including through features of that
   host you didn't think about (a gist, an issue comment). Keep the allow-list short, the tokens narrow, and protect
   your important branches on the git host.
-- **DNS.** Whether Docker's embedded DNS answers external names from the internal network hasn't been verified
-  here; treat DNS lookups as a possible side channel.
 - **Your review.** An agent's branch is untrusted code until you've read it. Its replies, transcripts and task
   reports are its own words, not verified facts.
 
